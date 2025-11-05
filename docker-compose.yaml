@@ -1,0 +1,35 @@
+# docker-compose.yaml
+version: '3.9'
+
+services:
+  bets-api:
+    image: golang:alpine
+    container_name: bets-api
+    working_dir: /app
+    ports:
+      - "8981:8981"
+    volumes:
+      - .:/app                     # весь код
+      - build-vol:/build           # ← папка /build будет доступна на хосте!
+    command: >
+      sh -c "
+        apk add --no-cache git &&
+        go mod download &&
+        mkdir -p /build &&
+        CGO_ENABLED=0 GOOS=linux go build -ldflags='-s -w' -o /build/bets-api ./cmd/bets-api &&
+        echo 'Бинарник собран в /build/bets-api' &&
+        /build/bets-api -port=8981
+      "
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  build-vol:        # ← именованный volume для /build
+
+networks:
+  default:
+    driver: bridge

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>🎰 Bets Dashboard</title>
+    <style>
+        :root {
+            --bg: #f4f7fc;
+            --card: #ffffff;
+            --primary: #5d5fe9;
+            --text: #2d3748;
+            --gray: #a0aec0;
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { text-align: center; color: var(--primary); }
+        .add-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            font-size: 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            float: right;
+            box-shadow: 0 4px 15px rgba(93,95,233,.3);
+        }
+        .add-btn:hover { background: #4c4cc7; }
+        .form {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0,0,0,.08);
+            margin: 20px 0;
+            display: none;
+        }
+        .form.show { display: block; }
+        input, button {
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            width: 100%;
+            font-size: 16px;
+        }
+        .submit-btn {
+            background: #48bb78;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .list {
+            list-style: none;
+            padding: 0;
+        }
+        .bet {
+            background: var(--card);
+            padding: 16px;
+            margin: 12px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,.05);
+            transition: all 0.2s;
+        }
+        .bet:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 25px rgba(0,0,0,.1);
+        }
+        .bet a {
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 18px;
+        }
+        .bet .info {
+            color: var(--gray);
+            font-size: 14px;
+            margin-top: 6px;
+        }
+        .status {
+            text-align: center;
+            padding: 20px;
+            font-size: 18px;
+            color: var(--gray);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🎰 Bets Dashboard</h1>
+    <button class="add-btn" onclick="toggleForm()">+ Добавить ставку</button>
+    <div style="clear:both"></div>
+
+    <!-- Форма добавления -->
+    <div id="form" class="form">
+        <h3>Новая ставка</h3>
+        <input id="user_id" placeholder="Твой ник" value="web_hero" />
+        <input id="amount" type="number" step="0.01" placeholder="Сумма (например: 150.50)" />
+        <input id="crash" type="number" step="0.01" placeholder="Коэффициент (например: 2.75)" />
+        <button class="submit-btn" onclick="createBet()">🚀 Отправить</button>
+        <button onclick="toggleForm()" style="background:#e53e3e;">Отмена</button>
+    </div>
+
+    <!-- Список ставок -->
+    <div id="status" class="status">Загрузка ставок...</div>
+    <ul id="bets-list" class="list"></ul>
+</div>
+
+<script>
+    const API = "http://localhost:8981";
+
+    // Переключить форму
+    function toggleForm() {
+        const form = document.getElementById("form");
+        form.classList.toggle("show");
+    }
+
+    // Создать ставку
+    async function createBet() {
+        const body = {
+            user_id: document.getElementById("user_id").value.trim(),
+            amount: parseFloat(document.getElementById("amount").value),
+            crash_point: parseFloat(document.getElementById("crash").value)
+        };
+
+        if (!body.user_id || !body.amount || !body.crash_point) {
+            alert("Заполни все поля!");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API}/bets`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                alert(`Ставка создана! ID: ${data.id}`);
+                toggleForm();
+                loadBets(); // обновить список
+            } else {
+                alert("Ошибка: " + res.status);
+            }
+        } catch (err) {
+            alert("Сервер не отвечает. Запусти: make docker-up");
+        }
+    }
+
+    // Загрузить и показать ставки
+    async function loadBets() {
+        try {
+            const res = await fetch(`${API}/bets?limit=50&sort=date_desc`);
+            const json = await res.json();
+
+            const list = document.getElementById("bets-list");
+            const status = document.getElementById("status");
+
+            if (!json.data || json.data.length === 0) {
+                status.innerHTML = "Пока нет ставок 😴";
+                list.innerHTML = "";
+                return;
+            }
+
+            status.innerHTML = `Найдено ставок: ${json.total}`;
+            list.innerHTML = json.data.map(bet => `
+          <li class="bet">
+            <a href="${API}/bets/${bet.id}" target="_blank">
+              #${bet.id.slice(0, 8)}...
+            </a>
+            <div class="info">
+              👤 <strong>${bet.user_id}</strong>
+              | 💰 <strong>${bet.amount.toFixed(2)}</strong>
+              | 🚀 x<strong>${bet.crash_point}</strong>
+              | ⏰ ${new Date(bet.created_at).toLocaleString()}
+            </div>
+          </li>
+        `).join("");
+        } catch (err) {
+            document.getElementById("status").innerHTML =
+                "Ошибка загрузки. Запусти сервер: <code>make docker-up</code>";
+        }
+    }
+
+    // Автозагрузка при открытии
+    loadBets();
+    setInterval(loadBets, 8981); // обновлять каждые 8 сек
+</script>
+</body>
+</html>
