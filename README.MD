@@ -6,7 +6,7 @@ Github:  https://github.com/kkravchenko/bets_api
 
 
 ### Run
-Clone project and run ` make dev` commands.
+Clone project and run ` make dev` command.
 Go to url: http://localhost:8981/
 
 #### All comands:
