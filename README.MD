@@ -6,17 +6,19 @@ Github:  https://github.com/kkravchenko/bets_api
 
 
 ### Run
-Clone project and run one of the commands:
-
-| Command          | Description                      |
-|------------------|----------------------------------|
-| `make dev`       | Запуск в dev-режиме с hot-reload |
-| `make build`     | Сборка в `/build/bets-api`       |
-| `make docker-up` | Поднять Docker-контейнер         |
-| `make clean`     | Удалить папку `build`            |
-| `make help`      | Показать эту справку             |
-
+Clone project and run ` make dev` commands.
 Go to url: http://localhost:8981/
+
+#### All comands:
+
+| Command          | Description                |
+|------------------|----------------------------|
+| `make dev`       | Запуск в dev-режиме        |
+| `make build`     | Сборка в `/build/bets-api` |
+| `make docker-up` | Поднять Docker-контейнер   |
+| `make clean`     | Удалить папку `build`      |
+| `make help`      | Показать эту справку       |
+
 
 ### END POINTS
 POST: /bets - Add bet
