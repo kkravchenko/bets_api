@@ -38,7 +38,6 @@ help:
 	@echo ""
 	@echo "Commands:"
 	@echo "make dev	- Running in dev mode"
-	@echo "make test	- Running tests"
 	@echo "make build	- Build app"
 	@echo "docker-up	- Bringing up the container"
 	@echo "make clean	- Clean build"
